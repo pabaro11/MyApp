@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.mygamecurator.ui
 
 import android.content.Context
@@ -11,14 +13,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.mygamecurator.api.ApiClient
 import com.example.mygamecurator.data.Game
+import com.example.mygamecurator.api.Keys
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.draw.clip
 
 // --------------------------------------
 // 성향 테스트 데이터 모델
@@ -33,52 +37,36 @@ data class TestQuestion(
     val options: List<TestOption>
 )
 
-// --------------------------------------
-// 테스트 질문 리스트
-// --------------------------------------
 val aptitudeQuestions = listOf(
-    TestQuestion(
-        question = "Q1. 평소에 스트레스를 어떻게 해소하나요?",
-        options = listOf(
-            TestOption("활동적이고 긴장감 있는 일", mapOf("액션" to 1, "전략" to -1)),
-            TestOption("조용하고 편안한 활동", mapOf("힐링" to 1, "공포" to -1))
-        )
-    ),
-    TestQuestion(
-        question = "Q2. 예상치 못한 상황이 발생했을 때, 당신은?",
-        options = listOf(
-            TestOption("즉시 몸을 움직여 대처한다.", mapOf("액션" to 1, "RPG" to 1)),
-            TestOption("잠시 멈춰 계획을 세우고 가장 효율적인 방법을 찾는다.", mapOf("전략" to 1, "힐링" to -1))
-        )
-    ),
-    TestQuestion(
-        question = "Q3. 게임의 세계관에 대한 당신의 선호도는?",
-        options = listOf(
-            TestOption("탄탄하고 복잡한 스토리라인과 자유로운 탐험을 선호한다.", mapOf("RPG" to 1, "오픈월드" to 1)),
-            TestOption("단순하더라도 압도적인 긴장감과 몰입감을 주는 세계관을 선호한다.", mapOf("공포" to 1, "액션" to -1))
-        )
-    ),
-    TestQuestion(
-        question = "Q4. 새로운 도전을 할 때 당신의 태도는?",
-        options = listOf(
-            TestOption("시행착오를 겪더라도 스스로 해결하며 점진적으로 성장하는 것을 즐긴다.", mapOf("RPG" to 1, "전략" to 1)),
-            TestOption("미리 준비된 도구와 무기를 활용해 정면 돌파하는 것을 즐긴다.", mapOf("액션" to 1, "오픈월드" to 1))
-        )
-    ),
-    TestQuestion(
-        question = "Q5. 현재 느끼는 감정 상태는?",
-        options = listOf(
-            TestOption("흥미진진하고 에너지 넘치는 상태", mapOf("액션" to 1, "공포" to 1)),
-            TestOption("차분하고 평화로운 상태", mapOf("힐링" to 1, "전략" to -1))
-        )
-    )
+    TestQuestion("Q1. 평소에 스트레스를 어떻게 해소하나요?", listOf(
+        TestOption("활동적이고 긴장감 있는 일", mapOf("액션" to 1, "전략" to -1)),
+        TestOption("조용하고 편안한 활동", mapOf("힐링" to 1, "공포" to -1))
+    )),
+    TestQuestion("Q2. 예상치 못한 상황이 발생했을 때, 당신은?", listOf(
+        TestOption("즉시 몸을 움직여 대처한다.", mapOf("액션" to 1, "RPG" to 1)),
+        TestOption("잠시 멈춰 계획을 세우고 가장 효율적인 방법을 찾는다.", mapOf("전략" to 1, "힐링" to -1))
+    )),
+    TestQuestion("Q3. 게임의 세계관에 대한 당신의 선호도는?", listOf(
+        TestOption("탄탄하고 복잡한 스토리라인과 자유로운 탐험을 선호한다.", mapOf("RPG" to 1, "오픈월드" to 1)),
+        TestOption("단순하더라도 압도적인 긴장감과 몰입감을 주는 세계관을 선호한다.", mapOf("공포" to 1, "액션" to -1))
+    )),
+    TestQuestion("Q4. 새로운 도전을 할 때 당신의 태도는?", listOf(
+        TestOption("시행착오를 겪더라도 스스로 해결하며 점진적으로 성장하는 것을 즐긴다.", mapOf("RPG" to 1, "전략" to 1)),
+        TestOption("미리 준비된 도구와 무기를 활용해 정면 돌파하는 것을 즐긴다.", mapOf("액션" to 1, "오픈월드" to 1))
+    )),
+    TestQuestion("Q5. 현재 느끼는 감정 상태는?", listOf(
+        TestOption("흥미진진하고 에너지 넘치는 상태", mapOf("액션" to 1, "공포" to 1)),
+        TestOption("차분하고 평화로운 상태", mapOf("힐링" to 1, "전략" to -1))
+    ))
 )
+
 
 @Composable
 fun HomeScreen(context: Context) {
 
     val scope = rememberCoroutineScope()
     val rawgApi = ApiClient.rawg
+    // ITAD API 참조 제거
 
     var gameList by remember { mutableStateOf<List<Game>>(emptyList()) }
     var filteredList by remember { mutableStateOf<List<Game>>(emptyList()) }
@@ -111,6 +99,13 @@ fun HomeScreen(context: Context) {
     val savedId = prefs.getInt("game_id", -1)
     val todayDate = LocalDate.now().toString()
     val genrePrefs = context.getSharedPreferences("user_aptitude", Context.MODE_PRIVATE)
+
+    // 상세 모달 상태
+    var selectedGameForDetails by remember { mutableStateOf<Game?>(null) }
+    // 찜 목록 상태
+    var favoriteGameIds by remember { mutableStateOf<Set<Int>>(emptySet()) }
+    val favPrefs = context.getSharedPreferences("user_favorites", Context.MODE_PRIVATE)
+
 
     // --------------------------------------
     // 한국어 → RAWG 매핑
@@ -146,9 +141,7 @@ fun HomeScreen(context: Context) {
                 search.isBlank() ||
                         game.name.contains(search, true)
 
-            // 장르 필터 통합 로직
             val matchesGenre = when {
-                // 1. 명시적 키워드 필터
                 selectedKeyword != null -> {
                     when (selectedKeyword) {
                         "공포" -> game.genres.any { horrorList.any { h -> h in it } }
@@ -160,14 +153,12 @@ fun HomeScreen(context: Context) {
                         else -> true
                     }
                 }
-                // 2. 성향 테스트 필터
                 useAptitudeFilter && userPreferredGenres.isNotEmpty() -> {
                     game.genres.any { gameGenre ->
                         val korGameGenre = mapToKorean(gameGenre)
                         userPreferredGenres.contains(korGameGenre)
                     }
                 }
-                // 3. 필터 없음
                 else -> true
             }
 
@@ -201,10 +192,29 @@ fun HomeScreen(context: Context) {
     }
 
     // --------------------------------------
+    // 찜하기/찜하기 취소 토글 함수
+    // --------------------------------------
+    fun toggleFavorite(game: Game) {
+        val newSet = if (favoriteGameIds.contains(game.id)) {
+            favoriteGameIds - game.id // 제거
+        } else {
+            favoriteGameIds + game.id // 추가
+        }
+
+        // SharedPreferences에 저장
+        favPrefs.edit().apply {
+            putStringSet("favorite_ids", newSet.map { it.toString() }.toSet())
+            apply()
+        }
+        favoriteGameIds = newSet
+        val message = if (favoriteGameIds.contains(game.id)) "${game.name}을(를) 찜 목록에 추가했습니다." else "${game.name}을(를) 찜 목록에서 제외했습니다."
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+
+    // --------------------------------------
     // 테스트 시작 및 완료 핸들러
     // --------------------------------------
     fun startTest() {
-        // 테스트 시작 전 점수 초기화
         genreScores = initialScores.toMutableMap()
         currentQuestionIndex = 0
         isTesting = true
@@ -213,7 +223,6 @@ fun HomeScreen(context: Context) {
     fun completeTest() {
         isTesting = false
 
-        // 최종 점수를 바탕으로 상위 2개 장르 선정
         val finalGenres = genreScores
             .toList()
             .sortedByDescending { (_, score) -> score }
@@ -230,7 +239,7 @@ fun HomeScreen(context: Context) {
 
 
     // --------------------------------------
-    // RAWG 데이터 로드 및 선호 장르 로드
+    // RAWG 데이터 로드 (가격 로직 제거)
     // --------------------------------------
     LaunchedEffect(true) {
         scope.launch {
@@ -239,6 +248,11 @@ fun HomeScreen(context: Context) {
                 val savedGenresSet = genrePrefs.getStringSet("preferred_genres", emptySet())
                 userPreferredGenres = savedGenresSet?.toList() ?: emptyList()
 
+                // 찜 목록 로드
+                val savedFavorites = favPrefs.getStringSet("favorite_ids", emptySet())
+                favoriteGameIds = savedFavorites?.mapNotNull { it.toIntOrNull() }?.toSet() ?: emptySet()
+
+
                 val popular = rawgApi.getPopularGames(pageSize = 100).results
                 val horror = rawgApi.searchGames("horror", pageSize = 100).results
                 val multi = rawgApi.searchGames("multiplayer", pageSize = 100).results
@@ -246,18 +260,15 @@ fun HomeScreen(context: Context) {
 
                 val combined = (popular + horror + multi + healing).distinctBy { it.id }
 
-                // 1차 필터링: 이미지가 null이 아니고, 평점이 0.0 이상인 게임만 포함 (데이터 로드 실패 방지)
-                val filteredRawgList = combined.filter {
-                    // ★ 최악의 경우 대비: rating을 문자열로 변환 후 Double로 안전하게 파싱
-                    val ratingValue = (it.rating?.toString()?.toDoubleOrNull() ?: 0.0)
-
-                    // 평점 0.0도 포함하여 데이터 확보
-                    it.background_image != null && ratingValue >= 0.0
+                val filteredRawgList = combined.filter { rawgGame ->
+                    val ratingValue = (rawgGame.rating?.toString()?.toDoubleOrNull() ?: 0.0)
+                    rawgGame.background_image != null && ratingValue >= 0.0
                 }
 
-                // 2차 매핑
                 val list = filteredRawgList.map { g ->
-                    // ★ 타입 변환 재수정: 문자열 변환 및 안전한 파싱
+
+                    // 가격 관련 변수 및 ITAD 로직 완전히 제거
+
                     val rawRating = (g.rating?.toString()?.toDoubleOrNull() ?: 0.0)
                     val rating = String.format("%.1f", rawRating).toDouble()
 
@@ -276,29 +287,26 @@ fun HomeScreen(context: Context) {
                     Game(
                         id = g.id,
                         name = g.name,
-                        // background_image는 필터링에서 null이 아님을 확인했으므로 !! 사용
                         imageUrl = g.background_image!!,
                         genres = genresEn,
                         rating = rating,
                         difficulty = difficulty,
                         playTime = playTime,
                         multiplayer = isMulti
+                        // 가격 필드 삭제됨
                     )
                 }
 
                 gameList = list
                 filteredList = list
 
-                // 오늘의 게임 안정성 강화 로직
+                // --- 오늘의 게임 로직 ---
                 if (list.isNotEmpty()) {
-                    // 평점 순으로 정렬하여 좋은 게임이 todayGame이 되도록 함
                     val qualityList = list.sortedByDescending { it.rating }
-
                     val existing = if (savedDate == todayDate)
                         qualityList.find { it.id == savedId }
                     else null
 
-                    // 리스트에서 무작위 선택
                     todayGame = existing ?: qualityList.random()
 
                     todayGame?.let { game ->
@@ -316,7 +324,6 @@ fun HomeScreen(context: Context) {
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                // 데이터 로드 실패 시 토스트 메시지 출력
                 Toast.makeText(context, "게임 데이터를 불러오지 못했습니다. 네트워크를 확인하세요.", Toast.LENGTH_LONG).show()
                 todayGame = null
             }
@@ -362,28 +369,20 @@ fun HomeScreen(context: Context) {
                     .padding(padding)
                     .fillMaxSize()
             ) {
-                // 오늘의 게임 카드
-                item {
-                    todayGame?.let { g ->
-                        val korGenres = g.genres.mapNotNull { mapToKorean(it) }
-                        TodayGameCard(g.copy(genres = korGenres))
-                    } ?: run {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(250.dp)
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("오늘의 게임을 찾을 수 없습니다. (데이터 로드 실패)", color = Color.Gray)
-                        }
+
+                // ★★★ 오늘의 게임 카드 UI 호출 (직전 복구 상태)
+                todayGame?.let { game ->
+                    item {
+                        TodayGameCard(
+                            game = game,
+                            onCardClick = { selectedGameForDetails = it }
+                        )
                     }
                 }
 
                 // 검색 섹션
                 item {
                     Column {
-                        // 성향 테스트 필터 토글 UI
                         if (userPreferredGenres.isNotEmpty()) {
                             Row(
                                 modifier = Modifier
@@ -399,18 +398,16 @@ fun HomeScreen(context: Context) {
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 FilterChip(
+                                    label = if (useAptitudeFilter) "성향 필터 ON" else "성향 필터 OFF",
                                     selected = useAptitudeFilter,
-                                    onClick = {
+                                    onSelected = {
                                         useAptitudeFilter = !useAptitudeFilter
                                         selectedKeyword = null
                                         applyFilters()
-                                    },
-                                    // ★ 문법 오류 수정: if else를 명확하게 작성
-                                    label = { Text(if (useAptitudeFilter) "성향 필터 ON" else "성향 필터 OFF") }
+                                    }
                                 )
                             }
                         } else {
-                            // 테스트 결과가 없을 때 테스트 유도 버튼 표시
                             AptitudeTestButton(onTestStart = {
                                 startTest()
                             })
@@ -424,9 +421,9 @@ fun HomeScreen(context: Context) {
                                     val res = rawgApi.searchGames(search, pageSize = 100)
 
                                     val list = res.results
-                                        // ★ 타입 변환 재수정: 문자열 변환 및 안전한 파싱
                                         .filter { it.background_image != null && (it.rating?.toString()?.toDoubleOrNull() ?: 0.0) >= 0.0 }
                                         .map { g ->
+
                                             val rawRating = (g.rating?.toString()?.toDoubleOrNull() ?: 0.0)
                                             val rating = String.format("%.1f", rawRating).toDouble()
                                             val difficulty: String = when {
@@ -449,6 +446,7 @@ fun HomeScreen(context: Context) {
                                                 difficulty = difficulty,
                                                 playTime = (30..120).random(),
                                                 multiplayer = isMulti
+                                                // 가격 필드 삭제됨
                                             )
                                         }
                                     gameList = list
@@ -497,15 +495,31 @@ fun HomeScreen(context: Context) {
                             g.copy(genres = korGenres)
                         }
 
-                    RecommendedGrid(finalList)
+                    RecommendedGrid(
+                        games = finalList,
+                        favoriteGameIds = favoriteGameIds,
+                        onCardClick = { game ->
+                            selectedGameForDetails = game
+                        },
+                        onToggleFavorite = ::toggleFavorite
+                    )
                 }
+            }
+
+            // 상세 모달 표시 로직
+            selectedGameForDetails?.let { game ->
+                GameDetailsDialog(
+                    game = game,
+                    onDismiss = { selectedGameForDetails = null }
+                    // ★★★ GameDetailsDialog에 mapToKorean 인수가 추가되기 직전
+                )
             }
         }
     }
 }
 
 // --------------------------------------
-// AptitudeTestButton (임시 Composable)
+// AptitudeTestButton, AptitudeTestSection
 // --------------------------------------
 @Composable
 fun AptitudeTestButton(onTestStart: () -> Unit) {
@@ -525,9 +539,6 @@ fun AptitudeTestButton(onTestStart: () -> Unit) {
     }
 }
 
-// --------------------------------------
-// AptitudeTestSection (성향 테스트 화면 Composable)
-// --------------------------------------
 @Composable
 fun AptitudeTestSection(
     question: TestQuestion,
@@ -544,7 +555,7 @@ fun AptitudeTestSection(
         horizontalAlignment = Alignment.Start
     ) {
         Text(
-            text = "나의 게임 성향 테스트",
+            text = "MBTI 스타일 성향 테스트",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = Color.White
