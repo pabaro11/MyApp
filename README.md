@@ -22,5 +22,18 @@
 <img width="501" height="1120" alt="스크린샷 2025-10-24 214515" src="https://github.com/user-attachments/assets/ce3fe32d-091a-43d0-8322-1b253270e7f3" />
 
 
-7. 나만의앱(슬라임점프게임)
+7. 나만의앱-중간고사(슬라임점프게임)
 <img width="266" height="586" alt="스크린샷 2025-10-26 163753" src="https://github.com/user-attachments/assets/2fc438f0-97d4-4423-b3b3-440edad65d80" />
+
+
+8. 나만의앱-기말고사(게임추천검색사이트)-MyGameCurator
+<img width="457" height="1014" alt="image" src="https://github.com/user-attachments/assets/11519325-ef89-43cd-9a1f-da65c9ba049a" />
+
+API 활용
+Rawg.API(게임 정보 로드)
+
+
+
+
+
+
