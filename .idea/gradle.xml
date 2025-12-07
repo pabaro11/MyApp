@@ -13,12 +13,15 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/idle_slime" />
             <option value="$PROJECT_DIR$/jump_slime" />
+            <option value="$PROJECT_DIR$/mygamecurator" />
+            <option value="$PROJECT_DIR$/practice" />
             <option value="$PROJECT_DIR$/w03" />
             <option value="$PROJECT_DIR$/w03_02" />
             <option value="$PROJECT_DIR$/w04" />
             <option value="$PROJECT_DIR$/w05" />
             <option value="$PROJECT_DIR$/w06" />
             <option value="$PROJECT_DIR$/w07" />
+            <option value="$PROJECT_DIR$/w09" />
           </set>
         </option>
       </GradleProjectSettings>
